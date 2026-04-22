@@ -42,6 +42,16 @@ h4 {
   background: #ccc;
 }
 
+.nav-buttons button.active {
+  background: #999;
+  border-color: #333;
+  font-weight: bold;
+}
+
+.nav-buttons button.active:hover {
+  background: #888;
+}
+
 #main {
   background-image: url("sample-images/veracruz-ppl.jpg"); /*set link to your inital image here between the " " */
   background-position: 0 0;
@@ -324,7 +334,7 @@ function initComparisons() {
   <p style="margin: 2px 10px 4px; font-size: 0.82rem; color: #555; text-align: left;">Group Lead: <a href="mailto:karl.peterson@utoronto.ca">Karl Peterson</a>, Developer: <a href="mailto:ekaterina.ossetchkina@mail.utoronto.ca">Katia Ossetchkina</a>.</p>
   <p style="margin: 2px 10px 8px; font-size: 0.82rem; color: #555; text-align: left;">This slider accompanies our research: <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/jmi.13059" target="_blank">Tapas de silice - a smorgasbord of reactive mineralogies and textures. Herzog Bromerchenkel et al. 2022, Journal of Microscopy</a></p>
   <div class="nav-buttons">
-    <button onclick="location.href='index.html'">Veracruz Sand</button>
+    <button onclick="location.href='index.html'" class="active">Veracruz Sand</button>
     <button onclick="location.href='granite.html'">Granite</button>
     <button onclick="location.href='limestone.html'">Limestone</button>
     <button onclick="location.href='upload.html'">Upload Your Own</button>

@@ -42,6 +42,16 @@ h4 {
   background: #ccc;
 }
 
+.nav-buttons button.active {
+  background: #999;
+  border-color: #333;
+  font-weight: bold;
+}
+
+.nav-buttons button.active:hover {
+  background: #888;
+}
+
 #main {
   /* background-image: url(https://drive.google.com/uc?export=view&id=1Wpbj2Qcwy9zCtMaLTZqMU0BCpHtpSk91); */
   background-image: url("sample-images/limestone-PPL.jpeg");
@@ -333,7 +343,7 @@ function initComparisons() {
   <div class="nav-buttons">
     <button onclick="location.href='index.html'">Veracruz Sand</button>
     <button onclick="location.href='granite.html'">Granite</button>
-    <button onclick="location.href='limestone.html'">Limestone</button>
+    <button onclick="location.href='limestone.html'" class="active">Limestone</button>
     <button onclick="location.href='upload.html'">Upload Your Own</button>
   </div>
   <h4 id='notice'><b>Please wait for image to load before beginning zoom/scroll.</b></h4>

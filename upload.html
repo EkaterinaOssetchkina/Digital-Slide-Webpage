@@ -42,6 +42,16 @@ h4 {
   background: #ccc;
 }
 
+.nav-buttons button.active {
+  background: #999;
+  border-color: #333;
+  font-weight: bold;
+}
+
+.nav-buttons button.active:hover {
+  background: #888;
+}
+
 .upload-section {
   margin: 10px 10px 14px;
   padding: 14px;
@@ -351,7 +361,7 @@ function initComparisons() {
     <button onclick="location.href='index.html'">Veracruz Sand</button>
     <button onclick="location.href='granite.html'">Granite</button>
     <button onclick="location.href='limestone.html'">Limestone</button>
-    <button onclick="location.href='upload.html'">Upload Your Own</button>
+    <button onclick="location.href='upload.html'" class="active">Upload Your Own</button>
   </div>
 
   <div class="upload-section">
