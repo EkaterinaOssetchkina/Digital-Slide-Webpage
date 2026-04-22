@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Digital Slide - Upload Your Own</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+h1 {
+  margin: 16px 10px 6px;
+  font-size: 1.8rem;
+}
+
+h4 {
+  margin: 0 10px 10px;
+  font-size: 1rem;
+  font-weight: normal;
+}
+
+.nav-buttons {
+  text-align: left;
+  margin: 0 0 14px 10px;
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.nav-buttons button {
+  margin: 0 6px;
+  padding: 0.6em 1em;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #ddd;
+  cursor: pointer;
+}
+
+.nav-buttons button:hover {
+  background: #ccc;
+}
+
+.upload-section {
+  margin: 10px 10px 14px;
+  padding: 14px;
+  border: 1px solid #aaa;
+  border-radius: 8px;
+  background: #f5f5f5;
+  display: inline-block;
+}
+
+.upload-section h3 {
+  margin: 0 0 10px;
+  font-size: 1rem;
+}
+
+.upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.upload-item label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+  font-size: 0.9rem;
+}
+
+.upload-item input[type="file"] {
+  font-size: 0.85rem;
+}
+
+.upload-status {
+  font-size: 0.8rem;
+  margin-top: 3px;
+}
+
+.upload-status.ready { color: green; }
+.upload-status.missing { color: #999; }
+.upload-status.error { color: #cc0000; }
+
+#loadBtn {
+  padding: 0.6em 1.4em;
+  border-radius: 6px;
+  border: 1px solid #555;
+  background: #4a90d9;
+  color: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+#loadBtn:hover { background: #357abd; }
+#loadBtn:disabled { background: #aaa; cursor: default; }
+
+#viewer-section { display: none; }
+
+#notice {
+  text-align: center;
+}
+
+#main {
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: 100%;
+  background-color: grey;
+  border: 1px solid #aaa;
+  width: 550px;
+  height: 467px;
+  margin: 0;
+  position: relative;
+}
+
+.img-comp-img {
+  position: absolute;
+  width: auto;
+  height: auto;
+  overflow: hidden;
+}
+
+.img-comp-img img {
+  display: block;
+  vertical-align: middle;
+  position: 0 0;
+}
+
+#overlay {
+  background-position: 0 0;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: 100%;
+  position: relative;
+  width: 550px;
+  height: 467px;
+  overflow: hidden;
+}
+
+@keyframes sliderHint {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+  20%  { transform: scale(1.5);  box-shadow: 0 0 10px 10px rgba(255,255,255,0.5); }
+  45%  { transform: scale(1.1);  box-shadow: 0 0 0 22px rgba(255,255,255,0); }
+  65%  { transform: scale(1.35); box-shadow: 0 0 8px 6px rgba(255,255,255,0.35); }
+  85%  { transform: scale(1);    box-shadow: 0 0 0 14px rgba(255,255,255,0); }
+  100% { transform: scale(1);    box-shadow: none; }
+}
+
+.img-comp-slider {
+  position: absolute;
+  z-index: 9;
+  cursor: ew-resize;
+  width: 40px;
+  height: 40px;
+  background-color: Grey;
+  opacity: 0.7;
+  border-radius: 50%;
+  animation: sliderHint 2s ease-out 0.7s 1;
+}
+
+p,
+#data {
+  text-align: center;
+}
+
+#data {
+  background: white;
+  font-weight: bold;
+  color: white;
+  padding: 1px;
+  font-size: 1;
+  border: 1px solid white;
+}
+
+.slidecontainer {
+  width: 100%;
+}
+
+.slider {
+  width: 33%;
+  height: 25px;
+  background: #d3d3d3;
+  outline: none;
+  opacity: 0.7;
+  -webkit-transition: .2s;
+  transition: opacity .2s;
+  margin-left: 33%;
+  margin-right: 33%;
+}
+
+.slider:hover {
+  opacity: 1;
+}
+
+.slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: black;
+  cursor: pointer;
+}
+
+.slider::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #04AA6D;
+  cursor: pointer;
+}
+
+.viewer-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 10px auto;
+  width: fit-content;
+}
+
+.side-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: stretch;
+  min-width: 80px;
+}
+
+.side-buttons .btn-label {
+  font-size: 0.75rem;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.side-buttons button {
+  padding: 0.4em 0.8em;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #ddd;
+  cursor: pointer;
+}
+
+.side-buttons button:hover {
+  background: #ccc;
+}
+
+.side-buttons button.active {
+  background: #999;
+  border-color: #333;
+  font-weight: bold;
+}
+
+.side-buttons button.active:hover {
+  background: #888;
+}
+
+.controls-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin: 4px auto 0;
+  width: fit-content;
+}
+
+.controls-bar .slidecontainer {
+  width: 300px;
+}
+
+.controls-bar .slider {
+  width: 100%;
+  margin: 0;
+}
+
+.controls-bar button {
+  padding: 0.4em 0.8em;
+  border-radius: 4px;
+  border: 1px solid #555;
+  background: #ddd;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.controls-bar button:hover {
+  background: #ccc;
+}
+</style>
+
+<script>
+function initComparisons() {
+  var x, i;
+  x = document.getElementsByClassName("img-comp-overlay");
+  for (i = 0; i < x.length; i++) {
+    compareImages(x[i]);
+  }
+  function compareImages(img) {
+    var slider, clicked = 0, w, h;
+    w = img.offsetWidth;
+    h = img.offsetHeight;
+    img.style.width = (w / 2) + "px";
+    slider = document.createElement("DIV");
+    slider.setAttribute("class", "img-comp-slider");
+    img.parentElement.insertBefore(slider, img);
+    slider.style.top = (h) - (slider.offsetHeight / 2) + "px";
+    slider.style.left = (w / 2) - (slider.offsetWidth / 2) + "px";
+    slider.addEventListener("mousedown", slideReady);
+    window.addEventListener("mouseup", slideFinish);
+    slider.addEventListener("touchstart", slideReady);
+    window.addEventListener("touchend", slideFinish);
+    function slideReady(e) {
+      e.preventDefault();
+      clicked = 1;
+      window.addEventListener("mousemove", slideMove);
+      window.addEventListener("touchmove", slideMove);
+    }
+    function slideFinish() { clicked = 0; }
+    function slideMove(e) {
+      var pos;
+      if (clicked == 0) return false;
+      pos = getCursorPos(e);
+      if (pos < 0) pos = 0;
+      if (pos > w) pos = w;
+      slide(pos);
+    }
+    function getCursorPos(e) {
+      var a, x = 0;
+      e = (e.changedTouches) ? e.changedTouches[0] : e;
+      a = img.getBoundingClientRect();
+      x = e.pageX - a.left;
+      x = x - window.pageXOffset;
+      return x;
+    }
+    function slide(x) {
+      img.style.width = x + "px";
+      slider.style.left = img.offsetWidth - (slider.offsetWidth / 2) + "px";
+    }
+  }
+}
+</script>
+</head>
+
+<body>
+  <h1>Digital Slide - Upload Your Own</h1>
+  <h4>University of Toronto &mdash; Civil Engineering Materials Group, 2021. </h4>
+  <p style="margin: 2px 10px 8px; font-size: 0.82rem; color: #555; text-align: left;">Group Lead: Karl Peterson, Developer: Katia Ossetchkina. This slider accompanies our research: <a href="https://onlinelibrary.wiley.com/doi/full/10.1111/jmi.13059" target="_blank">Tapas de sílice – a smörgåsbord of reactive mineralogies and textures. Herzog Bromerchenkel et al. 2022, Journal of Microscopy</a></p>
+  <div class="nav-buttons">
+    <button onclick="location.href='index.html'">Veracruz Sand</button>
+    <button onclick="location.href='granite.html'">Granite</button>
+    <button onclick="location.href='limestone.html'">Limestone</button>
+    <button onclick="location.href='upload.html'">Upload Your Own</button>
+  </div>
+
+  <div class="upload-section">
+    <h3>Upload your thin section images</h3>
+    <div class="upload-row">
+      <div class="upload-item">
+        <label for="upload-ppl">PPL (Plane-polarized light)</label>
+        <input type="file" id="upload-ppl" accept="image/*">
+        <div class="upload-status missing" id="status-ppl">Not uploaded</div>
+      </div>
+      <div class="upload-item">
+        <label for="upload-xpl">XPL (Cross-polarized light)</label>
+        <input type="file" id="upload-xpl" accept="image/*">
+        <div class="upload-status missing" id="status-xpl">Not uploaded</div>
+      </div>
+      <div class="upload-item">
+        <label for="upload-flo">FLO (Fluorescence)</label>
+        <input type="file" id="upload-flo" accept="image/*">
+        <div class="upload-status missing" id="status-flo">Not uploaded</div>
+      </div>
+    </div>
+    <button id="loadBtn" disabled onclick="loadImages()">Load Images</button>
+    <span id="load-hint" style="margin-left:10px; font-size:0.85rem; color:#666;">Upload all three images to enable.</span>
+    <div id="size-error" style="color:#cc0000; font-size:0.85rem; margin-top:6px; display:none;"></div>
+  </div>
+
+  <div id="viewer-section">
+    <h4 id='notice'><b>Please wait for image to load before beginning zoom/scroll.</b></h4>
+    <div class="viewer-wrapper">
+      <div class="side-buttons">
+        <span class="btn-label">Left view</span>
+        <button type="button" onclick="bw_over()" id="FLO_O">FLO</button>
+        <button type="button" onclick="ppl_over()" id="PPL_O">PPL</button>
+        <button type="button" onclick="xpl_over()" id="XPL_O">XPL</button>
+      </div>
+      <div class="bg-img" id="main">
+        <div class="img-comp-img"></div>
+        <div class="img-comp-overlay" id="overlay"></div>
+      </div>
+      <div class="side-buttons">
+        <span class="btn-label">Right view</span>
+        <button type="button" onclick="bw()" id="FLO">FLO</button>
+        <button type="button" onclick="ppl()" id="PPL">PPL</button>
+        <button type="button" onclick="xpl()" id="XPL">XPL</button>
+      </div>
+    </div>
+    <div class="controls-bar">
+      <div class="slidecontainer">
+        <input type="range" min="50" max="800" value="80" class="slider" id="myRange">
+      </div>
+      <button type="button" onclick="reset()" id="RESET">RESET ZOOM</button>
+    </div>
+    <div style="width:233px;height:50px;border:1px solid black; background: black; margin: 6px auto;" id="scale">
+      <p style="color: white;">scale: 1 mm<span id="testdemo"></span></p>
+    </div>
+    <input type="text" id="data" style="display:none;" />
+    <p style="text-align:center; margin: 5px 0 4px; font-size: 0.85rem; color: #444;"><b>Pan:</b> drag the image, <b>Compare filters:</b> drag the grey circle, <b>Zoom:</b> use the slider above</p>
+  </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+
+<script>
+var uploadedImages = { ppl: null, xpl: null, flo: null };
+var panInitialized = false;
+var lastSliderValue = 80;
+
+function getImageDimensions(url) {
+  return new Promise(function(resolve) {
+    var img = new Image();
+    img.onload = function() { resolve({ w: this.naturalWidth, h: this.naturalHeight }); };
+    img.src = url;
+  });
+}
+
+function updateUploadStatus() {
+  var allReady = uploadedImages.ppl && uploadedImages.xpl && uploadedImages.flo;
+  document.getElementById('loadBtn').disabled = !allReady;
+  document.getElementById('load-hint').style.display = allReady ? 'none' : 'inline';
+  document.getElementById('size-error').style.display = 'none';
+}
+
+function makeFileHandler(type) {
+  return function(e) {
+    var file = e.target.files[0];
+    if (!file) return;
+    if (uploadedImages[type]) URL.revokeObjectURL(uploadedImages[type]);
+    uploadedImages[type] = URL.createObjectURL(file);
+    var status = document.getElementById('status-' + type);
+    status.textContent = file.name;
+    status.className = 'upload-status ready';
+    updateUploadStatus();
+  };
+}
+
+document.getElementById('upload-ppl').addEventListener('change', makeFileHandler('ppl'));
+document.getElementById('upload-xpl').addEventListener('change', makeFileHandler('xpl'));
+document.getElementById('upload-flo').addEventListener('change', makeFileHandler('flo'));
+
+function loadImages() {
+  var errEl = document.getElementById('size-error');
+  errEl.style.display = 'none';
+
+  Promise.all([
+    getImageDimensions(uploadedImages.ppl),
+    getImageDimensions(uploadedImages.xpl),
+    getImageDimensions(uploadedImages.flo)
+  ]).then(function(dims) {
+    var ppl = dims[0], xpl = dims[1], flo = dims[2];
+    var mismatch = [];
+    if (xpl.w !== ppl.w || xpl.h !== ppl.h)
+      mismatch.push('XPL (' + xpl.w + '\xd7' + xpl.h + ') \u2260 PPL (' + ppl.w + '\xd7' + ppl.h + ')');
+    if (flo.w !== ppl.w || flo.h !== ppl.h)
+      mismatch.push('FLO (' + flo.w + '\xd7' + flo.h + ') \u2260 PPL (' + ppl.w + '\xd7' + ppl.h + ')');
+
+    if (mismatch.length > 0) {
+      errEl.innerHTML = 'Images must be the same dimensions:<br>' + mismatch.join('<br>');
+      errEl.style.display = 'block';
+      return;
+    }
+
+    document.getElementById("main").style.backgroundImage = "url('" + uploadedImages.ppl + "')";
+    document.getElementById("overlay").style.backgroundImage = "url('" + uploadedImages.xpl + "')";
+
+    document.getElementById('viewer-section').style.display = 'block';
+
+    if (!panInitialized) {
+      initPanHandlers();
+      panInitialized = true;
+    }
+
+    var oldSliders = document.querySelectorAll('.img-comp-slider');
+    oldSliders.forEach(function(s) { s.parentNode.removeChild(s); });
+    document.getElementById('overlay').style.width = '550px';
+    initComparisons();
+
+    reset();
+    setActive('left', 'XPL_O');
+    setActive('right', 'PPL');
+  });
+}
+
+function initPanHandlers() {
+  function setupPan(bgId, syncId) {
+    var $bg = $('#' + bgId),
+      data = $('#data')[0],
+      elbounds = { w: parseInt($bg.width()), h: parseInt($bg.height()) },
+      bounds = { w: 10000 + elbounds.w, h: 10000 + elbounds.h },
+      origin = { x: 0, y: 0 },
+      start = { x: 0, y: 0 },
+      movecontinue = false;
+
+    $bg.data("mostleft", 25000);
+    $bg.data("mostup", 25000);
+
+    function move(e) {
+      var inbounds = { x: false, y: false },
+        offset = {
+          x: start.x - (origin.x - e.clientX),
+          y: start.y - (origin.y - e.clientY)
+        };
+      if (data) data.value = 'X: ' + offset.x + ', Y: ' + offset.y;
+      inbounds.x = offset.x < 0 && (offset.x * -1) < bounds.w;
+      inbounds.y = offset.y < 0 && (offset.y * -1) < bounds.h;
+      if (movecontinue && inbounds.x && inbounds.y) {
+        start.x = offset.x < ($bg.data("mostleft") * -1) ? ($bg.data("mostleft") * -1) : offset.x;
+        start.y = offset.y < ($bg.data("mostup") * -1) ? ($bg.data("mostup") * -1) : offset.y;
+        $(this).css('background-position', start.x + 'px ' + start.y + 'px');
+        document.getElementById(syncId).style.backgroundPosition = start.x + 'px ' + start.y + 'px';
+      }
+      origin.x = e.clientX;
+      origin.y = e.clientY;
+      e.stopPropagation();
+      return false;
+    }
+
+    function handle(e) {
+      movecontinue = false;
+      $bg.unbind('mousemove', move);
+      if (e.type == 'mousedown') {
+        origin.x = e.clientX;
+        origin.y = e.clientY;
+        var bgPos = window.getComputedStyle($bg[0]).backgroundPosition.trim().split(/\s+/);
+        start.x = parseFloat(bgPos[0]) || 0;
+        start.y = parseFloat(bgPos.length > 1 ? bgPos[1] : bgPos[0]) || 0;
+        movecontinue = true;
+        $bg.bind('mousemove', move);
+      } else {
+        $('#' + bgId).focus();
+      }
+      e.stopPropagation();
+      return false;
+    }
+
+    $bg.unbind('mousedown mouseup mouseleave');
+    $bg.bind('mousedown mouseup mouseleave', handle);
+  }
+
+  setupPan('main', 'overlay');
+  setupPan('overlay', 'main');
+
+  var slider = document.getElementById("myRange");
+  slider.oninput = function() {
+    var newSize = parseInt(this.value);
+    var mainEl = document.getElementById("main");
+    var overlay = document.getElementById("overlay");
+    var scalebar = document.getElementById("scale");
+
+    var bgPos = window.getComputedStyle(mainEl, null).backgroundPosition.trim().split(/\s+/);
+    var curX = parseFloat(bgPos[0]) || 0;
+    var curY = parseFloat(bgPos.length > 1 ? bgPos[1] : bgPos[0]) || 0;
+
+    var rect = mainEl.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+
+    var ratio = newSize / lastSliderValue;
+    var newX = Math.round(cx - (cx - curX) * ratio);
+    var newY = Math.round(cy - (cy - curY) * ratio);
+    lastSliderValue = newSize;
+
+    mainEl.style.backgroundSize = newSize + "%";
+    mainEl.style.backgroundPosition = newX + "px " + newY + "px";
+    overlay.style.backgroundSize = newSize + "%";
+    overlay.style.backgroundPosition = newX + "px " + newY + "px";
+    scalebar.style.width = newSize / 100 * 233 + 'px';
+  };
+
+  slider.addEventListener('mouseup', function() { this.blur(); });
+  slider.addEventListener('touchend', function() { this.blur(); });
+}
+
+function setActive(group, id) {
+  var ids = group === 'right' ? ['FLO', 'PPL', 'XPL'] : ['FLO_O', 'PPL_O', 'XPL_O'];
+  ids.forEach(function(btnId) {
+    var el = document.getElementById(btnId);
+    if (el) el.classList.remove('active');
+  });
+  var target = document.getElementById(id);
+  if (target) target.classList.add('active');
+}
+
+function xpl() {
+  setActive('right', 'XPL');
+  document.getElementById("main").style.backgroundImage = "url('" + uploadedImages.xpl + "')";
+}
+function bw() {
+  setActive('right', 'FLO');
+  document.getElementById("main").style.backgroundImage = "url('" + uploadedImages.flo + "')";
+}
+function ppl() {
+  setActive('right', 'PPL');
+  document.getElementById("main").style.backgroundImage = "url('" + uploadedImages.ppl + "')";
+}
+function xpl_over() {
+  setActive('left', 'XPL_O');
+  document.getElementById("overlay").style.backgroundImage = "url('" + uploadedImages.xpl + "')";
+}
+function bw_over() {
+  setActive('left', 'FLO_O');
+  document.getElementById("overlay").style.backgroundImage = "url('" + uploadedImages.flo + "')";
+}
+function ppl_over() {
+  setActive('left', 'PPL_O');
+  document.getElementById("overlay").style.backgroundImage = "url('" + uploadedImages.ppl + "')";
+}
+
+function reset() {
+  document.getElementById("main").style.backgroundPosition = "0 0";
+  document.getElementById("main").style.backgroundSize = "100%";
+  document.getElementById("overlay").style.backgroundPosition = "0 0";
+  document.getElementById("overlay").style.backgroundSize = "100%";
+  var slider = document.getElementById("myRange");
+  if (slider) slider.value = "100";
+  lastSliderValue = 100;
+  var scalebar = document.getElementById("scale");
+  if (scalebar) scalebar.style.width = 233 + 'px';
+}
+</script>
+
+</body>
+</html>
