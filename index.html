@@ -282,6 +282,9 @@ function initComparisons() {
     /*and released (for touch screens:*/
     window.addEventListener("touchend", slideFinish);
     function slideReady(e) {
+      if (e.type === 'mousedown' && e.button !== 0) {
+        return false;
+      }
       /*prevent any other actions that may occur when moving over the image:*/
       e.preventDefault();
       /*the slider is now clicked and ready to move:*/
@@ -377,98 +380,83 @@ function initComparisons() {
 <script>
 
 $('#main').ready(function() {
-  var $bg = $('#main'), //.bg-img
-    data = $('#data')[0],
-    elbounds = {
-      w: parseInt($bg.width()),
-      h: parseInt($bg.height())
-    },
-    bounds = {
-      w: 10000 + elbounds.w , //need to check the limit here
-      h: 10000 + elbounds.h
-    },
-    origin = {
-      x: 0,
-      y: 0
-    },
-    start = {
-      x: 0,
-      y: 0
-    },
-    movecontinue = false;
-  bgSize($bg, function(w, h) { //act on and store the most up and left
-    console.log(`image dimensions => width:${w}, height:${h}`);
-    $bg.data("mostleft", (25000));
-    $bg.data("mostup", (25000));
-    //$bg.data("mostleft", (elbounds.w * -1) + w);
-    //$bg.data("mostup", (elbounds.h * -1) + h);
+  var $bg = $('#main'),
+      data = $('#data')[0],
+      origin = { x: 0, y: 0 },
+      start = { x: 0, y: 0 },
+      movecontinue = false;
+
+  bgSize($bg, function() {
+    $bg.data('mostleft', 25000);
+    $bg.data('mostup', 25000);
   });
 
+  function stopPan() {
+    movecontinue = false;
+    $bg.off('mousemove.pan');
+  }
+
   function move(e) {
-    var inbounds = {
-        x: false,
-        y: false
-      },
-      offset = {
-        x: start.x - (origin.x - e.clientX),
-        y: start.y - (origin.y - e.clientY)
-      };
+    if (!movecontinue) return false;
+    if (typeof e.buttons !== 'undefined' && e.buttons !== 1) {
+      stopPan();
+      return false;
+    }
 
-    data.value = 'X: ' + offset.x + ', Y: ' + offset.y;
+    var offset = {
+      x: start.x - (origin.x - e.clientX),
+      y: start.y - (origin.y - e.clientY)
+    };
 
-    inbounds.x = offset.x < 0 && (offset.x * -1) < bounds.w;
-    inbounds.y = offset.y < 0 && (offset.y * -1) < bounds.h;
+    if (data) data.value = 'X: ' + offset.x + ', Y: ' + offset.y;
 
-    if (movecontinue && inbounds.x && inbounds.y) {
-      // ensure that up and left are limited appropriately
-      start.x = offset.x < ($bg.data("mostleft") * -1) ? ($bg.data("mostleft") * -1) : offset.x;
-      start.y = offset.y < ($bg.data("mostup") * -1) ? ($bg.data("mostup") * -1) : offset.y;
+    var bounds = {
+      w: 10000 + $bg.width(),
+      h: 10000 + $bg.height()
+    };
 
-      $(this).css('background-position', start.x + 'px ' + start.y + 'px');
-      document.getElementById("overlay").style.backgroundPosition = start.x + 'px ' + start.y + 'px';
+    if (offset.x < 0 && (offset.x * -1) < bounds.w && offset.y < 0 && (offset.y * -1) < bounds.h) {
+      start.x = offset.x < ($bg.data('mostleft') * -1) ? ($bg.data('mostleft') * -1) : offset.x;
+      start.y = offset.y < ($bg.data('mostup') * -1) ? ($bg.data('mostup') * -1) : offset.y;
+      $bg.css('background-position', start.x + 'px ' + start.y + 'px');
+      $('#overlay').css('background-position', start.x + 'px ' + start.y + 'px');
     }
 
     origin.x = e.clientX;
     origin.y = e.clientY;
-
-    e.stopPropagation();
+    e.preventDefault();
     return false;
   }
 
   function handle(e) {
-    movecontinue = false;
-    $bg.unbind('mousemove', move);
-
-    if (e.type == 'mousedown') {
+    if (e.type === 'mousedown') {
+      if (e.button !== 0) return false;
+      e.preventDefault();
       origin.x = e.clientX;
       origin.y = e.clientY;
       var bgPos = window.getComputedStyle($bg[0]).backgroundPosition.trim().split(/\s+/);
       start.x = parseFloat(bgPos[0]) || 0;
       start.y = parseFloat(bgPos.length > 1 ? bgPos[1] : bgPos[0]) || 0;
       movecontinue = true;
-      $bg.bind('mousemove', move);
-    } else {
-      $('#main').focus();
+      $bg.on('mousemove.pan', move);
+      return false;
     }
 
-    e.stopPropagation();
+    stopPan();
+    e.preventDefault();
     return false;
-
   }
 
-  function reset() {
-    start = {
-      x: 0,
-      y: 0
-    };
-    $(this).css('backgroundPosition', '0 0');
-  }
-
-  $bg.bind('mousedown mouseup mouseleave', handle);
-  $bg.bind('dblclick', reset);
-
+  $(window).on('mouseup.pan', stopPan);
+  $bg.on('mousedown.pan', handle);
+  $bg.on('mouseup.pan mouseleave.pan', handle);
+  $bg.on('dblclick.pan', function() {
+    start = { x: 0, y: 0 };
+    $bg.css('background-position', '0 0');
+    $('#overlay').css('background-position', '0 0');
+  });
 });
-//function to accurately calculate image size.
+
 function bgSize($el, cb) {
   $('<img />')
     .load(function() {
@@ -476,107 +464,6 @@ function bgSize($el, cb) {
     })
     .attr('src', $el.css('backgroundImage').match(/^url\("?(.+?)"?\)$/)[1]);
 }
-
-$('#overlay').ready(function() {
-  var $bg = $('#overlay'), //.img-comp-overlay
-    data = $('#data')[0],
-    elbounds = {
-      w: parseInt($bg.width()),
-      h: parseInt($bg.height())
-    },
-    bounds = {
-      w: 10000 + elbounds.w , //need to check the limit here
-      h: 10000 + elbounds.h
-    },
-    origin = {
-      x: 0,
-      y: 0
-    },
-    start = {
-      x: 0,
-      y: 0
-    },
-    movecontinue = false;
-  bgSize($bg, function(w, h) { //act on and store the most up and left
-    console.log(`image dimensions => width:${w}, height:${h}`);
-    $bg.data("mostleft", (25000));
-    $bg.data("mostup", (25000));
-    //$bg.data("mostleft", (elbounds.w * -1) + w);
-    //$bg.data("mostup", (elbounds.h * -1) + h);
-  });
-
-  function move(e) {
-    var inbounds = {
-        x: false,
-        y: false
-      },
-      offset = {
-        x: start.x - (origin.x - e.clientX),
-        y: start.y - (origin.y - e.clientY)
-      };
-
-    data.value = 'X: ' + offset.x + ', Y: ' + offset.y;
-
-    inbounds.x = offset.x < 0 && (offset.x * -1) < bounds.w;
-    inbounds.y = offset.y < 0 && (offset.y * -1) < bounds.h;
-
-    if (movecontinue && inbounds.x && inbounds.y) {
-      // ensure that up and left are limited appropriately
-      start.x = offset.x < ($bg.data("mostleft") * -1) ? ($bg.data("mostleft") * -1) : offset.x;
-      start.y = offset.y < ($bg.data("mostup") * -1) ? ($bg.data("mostup") * -1) : offset.y;
-
-      $(this).css('background-position', start.x + 'px ' + start.y + 'px');
-      document.getElementById("main").style.backgroundPosition = start.x + 'px ' + start.y + 'px';
-
-    }
-
-    origin.x = e.clientX;
-    origin.y = e.clientY;
-
-    e.stopPropagation();
-    return false;
-  }
-
-  function handle(e) {
-    movecontinue = false;
-    $bg.unbind('mousemove', move);
-
-    if (e.type == 'mousedown') {
-      origin.x = e.clientX;
-      origin.y = e.clientY;
-      var bgPos = window.getComputedStyle($bg[0]).backgroundPosition.trim().split(/\s+/);
-      start.x = parseFloat(bgPos[0]) || 0;
-      start.y = parseFloat(bgPos.length > 1 ? bgPos[1] : bgPos[0]) || 0;
-      movecontinue = true;
-      $bg.bind('mousemove', move);
-    } else {
-      $('#overlay').focus();
-    }
-
-    e.stopPropagation();
-    return false;
-  }
-
-  function reset() {
-    start = {
-      x: 0,
-      y: 0
-    };
-    $(this).css('backgroundPosition', '0 0');
-  }
-
-  $bg.bind('mousedown mouseup mouseleave', handle);
-  $bg.bind('dblclick', reset);
-});
-//function to accurately calculate image size.
-function bgSize($el, cb) {
-  $('<img />')
-    .load(function() {
-      cb(this.width, this.height);
-    })
-    .attr('src', $el.css('backgroundImage').match(/^url\("?(.+?)"?\)$/)[1]);
-}
-
 
 function setActive(group, id) {
     var ids = group === 'right' ? ['FLO', 'PPL', 'XPL'] : ['FLO_O', 'PPL_O', 'XPL_O'];

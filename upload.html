@@ -506,57 +506,73 @@ function loadImages() {
 function initPanHandlers() {
   function setupPan(bgId, syncId) {
     var $bg = $('#' + bgId),
-      data = $('#data')[0],
-      elbounds = { w: parseInt($bg.width()), h: parseInt($bg.height()) },
-      bounds = { w: 10000 + elbounds.w, h: 10000 + elbounds.h },
-      origin = { x: 0, y: 0 },
-      start = { x: 0, y: 0 },
-      movecontinue = false;
+        data = $('#data')[0],
+        origin = { x: 0, y: 0 },
+        start = { x: 0, y: 0 },
+        movecontinue = false;
 
-    $bg.data("mostleft", 25000);
-    $bg.data("mostup", 25000);
+    $bg.data('mostleft', 25000);
+    $bg.data('mostup', 25000);
+
+    function stopPan() {
+      movecontinue = false;
+      $bg.off('mousemove.pan');
+    }
 
     function move(e) {
-      var inbounds = { x: false, y: false },
-        offset = {
-          x: start.x - (origin.x - e.clientX),
-          y: start.y - (origin.y - e.clientY)
-        };
+      if (!movecontinue) return false;
+      if (typeof e.buttons !== 'undefined' && e.buttons !== 1) {
+        stopPan();
+        return false;
+      }
+
+      var offset = {
+        x: start.x - (origin.x - e.clientX),
+        y: start.y - (origin.y - e.clientY)
+      };
       if (data) data.value = 'X: ' + offset.x + ', Y: ' + offset.y;
-      inbounds.x = offset.x < 0 && (offset.x * -1) < bounds.w;
-      inbounds.y = offset.y < 0 && (offset.y * -1) < bounds.h;
-      if (movecontinue && inbounds.x && inbounds.y) {
-        start.x = offset.x < ($bg.data("mostleft") * -1) ? ($bg.data("mostleft") * -1) : offset.x;
-        start.y = offset.y < ($bg.data("mostup") * -1) ? ($bg.data("mostup") * -1) : offset.y;
-        $(this).css('background-position', start.x + 'px ' + start.y + 'px');
+
+      var bounds = {
+        w: 10000 + $bg.width(),
+        h: 10000 + $bg.height()
+      };
+
+      if (offset.x < 0 && (offset.x * -1) < bounds.w && offset.y < 0 && (offset.y * -1) < bounds.h) {
+        start.x = offset.x < ($bg.data('mostleft') * -1) ? ($bg.data('mostleft') * -1) : offset.x;
+        start.y = offset.y < ($bg.data('mostup') * -1) ? ($bg.data('mostup') * -1) : offset.y;
+        $bg.css('background-position', start.x + 'px ' + start.y + 'px');
         document.getElementById(syncId).style.backgroundPosition = start.x + 'px ' + start.y + 'px';
       }
+
       origin.x = e.clientX;
       origin.y = e.clientY;
-      e.stopPropagation();
+      e.preventDefault();
       return false;
     }
 
     function handle(e) {
-      movecontinue = false;
-      $bg.unbind('mousemove', move);
-      if (e.type == 'mousedown') {
+      if (e.type === 'mousedown') {
+        if (e.button !== 0) return false;
+        e.preventDefault();
         origin.x = e.clientX;
         origin.y = e.clientY;
         var bgPos = window.getComputedStyle($bg[0]).backgroundPosition.trim().split(/\s+/);
         start.x = parseFloat(bgPos[0]) || 0;
         start.y = parseFloat(bgPos.length > 1 ? bgPos[1] : bgPos[0]) || 0;
         movecontinue = true;
-        $bg.bind('mousemove', move);
-      } else {
-        $('#' + bgId).focus();
+        $bg.on('mousemove.pan', move);
+        return false;
       }
-      e.stopPropagation();
+
+      stopPan();
+      e.preventDefault();
       return false;
     }
 
-    $bg.unbind('mousedown mouseup mouseleave');
-    $bg.bind('mousedown mouseup mouseleave', handle);
+    $(window).on('mouseup.pan', stopPan);
+    $bg.off('mousedown.pan mouseup.pan mouseleave.pan');
+    $bg.on('mousedown.pan', handle);
+    $bg.on('mouseup.pan mouseleave.pan', handle);
   }
 
   setupPan('main', 'overlay');
